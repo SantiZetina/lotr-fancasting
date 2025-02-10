@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2, Search, Loader2 } from 'lucide-react';
 
 // Move initial state outside component
@@ -13,15 +14,24 @@ const initialState = {
   newActor: '',
   actorResults: [],
   isSearching: false,
-  selectedActor: null
+  selectedActor: null,
+  selectedRace: '',
+  characterDescription: '',
 };
 
+const raceOptions = [
+  {value: 'elf', label: 'Elf', description: "Gods favorite children"},
+  {value: 'human', label: 'Human', description: 'Gods second favorite creatures'},
+  {value: 'dwarf', label: 'Dwarf', description: 'Irish People'},
+  {value: 'hobbit', label: 'Hobbit', description: ''},
+  {value: 'wizard', label: 'Wizard', description: ''},
+  {value: 'other', label: 'Other', description: 'South Koreans'}
+];
+
 const FanCastingApp = () => {
-  // Use a single state object to ensure consistency
   const [state, setState] = useState(initialState);
   
   useEffect(() => {
-    // Load saved castings after component mounts
     try {
       const savedCastings = localStorage.getItem('lotrCastings');
       if (savedCastings) {
@@ -73,12 +83,14 @@ const FanCastingApp = () => {
   };
 
   const handleAddCharacter = () => {
-    if (state.newCharacter && state.selectedActor) {
+    if (state.newCharacter && state.selectedActor && state.selectedRace) {
       const updatedCastings = [...state.characters, {
         id: Date.now(),
         character: state.newCharacter,
         actor: state.selectedActor.name,
-        image: state.selectedActor.image
+        image: state.selectedActor.image,
+        race: state.selectedRace,
+        description: state.characterDescription
       }];
       saveCastings(updatedCastings);
       setState(prev => ({
@@ -86,6 +98,8 @@ const FanCastingApp = () => {
         newCharacter: '',
         newActor: '',
         selectedActor: null,
+        selectedRace: '',
+        characterDescription: '',
         actorResults: []
       }));
     }
@@ -106,6 +120,7 @@ const FanCastingApp = () => {
   };
 
   return (
+    <div>
     <div className="min-h-screen bg-[#1A0F0F] bg-opacity-90 bg-[url('/texture-bg.png')] p-8">
       <div className="max-w-4xl mx-auto">
         {/* Title Section */}
@@ -118,84 +133,110 @@ const FanCastingApp = () => {
           </div>
         </div>
 
-        {/* Input Section - Styled like a magical tome */}
+        {/* Input Section */}
         <div className="bg-[#2A1F1D] p-6 rounded-lg border-4 border-[#463020] shadow-2xl mb-8">
           <div className="bg-[#1A1210] p-4 rounded border-2 border-[#634832]">
             <div className="text-[#D4AF37] font-serif text-xl mb-4">New Casting</div>
-            <div className="flex flex-col md:flex-row gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <Input
                 type="text"
                 placeholder="Character Name"
                 value={state.newCharacter}
                 onChange={(e) => setState(prev => ({ ...prev, newCharacter: e.target.value }))}
-                className="flex-1 bg-[#2A1F1D] border-2 border-[#634832] text-[#D4AF37] placeholder:text-[#634832]"
+                className="bg-[#2A1F1D] border-2 border-[#634832] text-[#D4AF37]"
               />
-              <div className="flex-1 relative">
-                <div className="flex gap-2">
-                  <Input
-                    type="text"
-                    placeholder="Search Actor"
-                    value={state.newActor}
-                    onChange={(e) => setState(prev => ({
-                      ...prev,
-                      newActor: e.target.value,
-                      selectedActor: null
-                    }))}
-                    className="flex-1 bg-[#2A1F1D] border-2 border-[#634832] text-[#D4AF37] placeholder:text-[#634832]"
-                  />
-                  <Button 
-                    onClick={searchActor}
-                    disabled={state.isSearching || !state.newActor}
-                    className="bg-[#634832] hover:bg-[#463020] text-[#D4AF37] border-2 border-[#634832]"
-                  >
-                    {state.isSearching ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Search className="w-4 h-4" />
-                    )}
-                  </Button>
-                </div>
-                
-                {state.actorResults.length > 0 && (
-                  <div className="absolute w-full mt-2 z-10 bg-[#2A1F1D] border-2 border-[#634832] rounded shadow-2xl">
-                    {state.actorResults.map((actor, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center gap-3 p-3 hover:bg-[#1A1210] cursor-pointer border-b border-[#634832] last:border-b-0"
-                        onClick={() => handleSelectActor(actor)}
-                      >
-                        <img
-                          src={actor.image}
-                          alt={actor.name}
-                          className="w-12 h-16 object-cover rounded border-2 border-[#634832]"
-                        />
-                        <div>
-                          <p className="font-serif text-[#D4AF37]">{actor.name}</p>
-                          <p className="text-sm text-[#C0C0C0]">{actor.description}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <Button 
-                onClick={handleAddCharacter}
-                disabled={!state.newCharacter || !state.selectedActor}
-                className="whitespace-nowrap bg-[#634832] hover:bg-[#463020] text-[#D4AF37] border-2 border-[#634832] font-serif"
+              <Select 
+                value={state.selectedRace} 
+                onValueChange={(value) => setState(prev => ({ ...prev, selectedRace: value }))}
               >
-                <Plus className="w-4 h-4 mr-2" />
-                Add to Archives
-              </Button>
+                <SelectTrigger className="bg-[#2A1F1D] border-2 border-[#634832] text-[#D4AF37]">
+                  <SelectValue placeholder="Select Race" />
+                </SelectTrigger>
+                <SelectContent>
+                  {raceOptions.map(race => (
+                    <SelectItem key={race.value} value={race.value}>
+                      {race.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+            <div className="relative mb-4">
+              <div className="flex gap-2">
+                <Input
+                  type="text"
+                  placeholder="Search Actor"
+                  value={state.newActor}
+                  onChange={(e) => setState(prev => ({
+                    ...prev,
+                    newActor: e.target.value,
+                    selectedActor: null
+                  }))}
+                  className="flex-1 bg-[#2A1F1D] border-2 border-[#634832] text-[#D4AF37]"
+                />
+                <Button 
+                  onClick={searchActor}
+                  disabled={state.isSearching || !state.newActor}
+                  className="bg-[#634832] hover:bg-[#463020] text-[#D4AF37]"
+                >
+                  {state.isSearching ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Search className="w-4 h-4" />
+                  )}
+                </Button>
+              </div>
+              
+              {state.actorResults.length > 0 && (
+                <div className="absolute w-full mt-2 z-10 bg-[#2A1F1D] border-2 border-[#634832] rounded shadow-2xl">
+                  {state.actorResults.map((actor, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-3 p-3 hover:bg-[#1A1210] cursor-pointer border-b border-[#634832] last:border-b-0"
+                      onClick={() => handleSelectActor(actor)}
+                    >
+                      <img
+                        src={actor.image}
+                        alt={actor.name}
+                        className="w-12 h-16 object-cover rounded"
+                      />
+                      <div>
+                        <p className="font-serif text-[#D4AF37]">{actor.name}</p>
+                        <p className="text-sm text-[#C0C0C0]">{actor.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <textarea
+              placeholder="Why would they be perfect for this role? (optional)"
+              value={state.characterDescription}
+              onChange={(e) => setState(prev => ({ ...prev, characterDescription: e.target.value }))}
+              className="w-full h-24 mb-4 bg-[#2A1F1D] border-2 border-[#634832] text-[#D4AF37] rounded p-2"
+            />
+            <Button 
+              onClick={handleAddCharacter}
+              disabled={!state.newCharacter || !state.selectedActor || !state.selectedRace}
+              className="w-full bg-[#634832] hover:bg-[#463020] text-[#D4AF37]"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add to Archives
+            </Button>
           </div>
         </div>
 
-        {/* Characters Grid - Styled like ancient scrolls/portraits */}
+        {/* Characters Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {state.characters.map((char) => (
             <div key={char.id} className="bg-[#2A1F1D] rounded-lg border-4 border-[#463020] shadow-xl overflow-hidden">
               <div className="bg-[#1A1210] px-4 py-2 flex justify-between items-center border-b-2 border-[#634832]">
-                <h3 className="font-serif text-[#D4AF37]">{char.character}</h3>
+                <div>
+                  <h3 className="font-serif text-[#D4AF37]">{char.character}</h3>
+                  <div className="text-sm text-[#C0C0C0]">
+                    {raceOptions.find(r => r.value === char.race)?.label}
+                  </div>
+                </div>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -206,14 +247,18 @@ const FanCastingApp = () => {
                 </Button>
               </div>
               <div className="p-4">
-                <div className="relative">
+                <div className="relative mb-3">
                   <img
                     src={char.image}
                     alt={`${char.actor} as ${char.character}`}
-                    className="w-full h-48 object-cover rounded border-2 border-[#634832] mb-3"
+                    className="w-full h-48 object-cover rounded border-2 border-[#634832]"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#1A1210] to-transparent opacity-20" />
                 </div>
+                {char.description && (
+                  <div className="mb-3 text-sm text-[#C0C0C0] italic">
+                    "{char.description}"
+                  </div>
+                )}
                 <div className="text-sm text-[#C0C0C0] font-serif">Portrayed by</div>
                 <div className="text-[#D4AF37] font-serif">{char.actor}</div>
               </div>
@@ -222,6 +267,7 @@ const FanCastingApp = () => {
         </div>
       </div>
     </div>
+    /</div>
   );
 };
 
